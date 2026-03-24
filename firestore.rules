@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    match /artifacts/{appId}/public/data/questions/{questionId} {
+      allow read: if true;
+      allow write: if isAuthenticated(); // In a real app, you'd check for admin role
+    }
+
+    match /artifacts/{appId}/public/data/answers/{answerId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+  }
+}
