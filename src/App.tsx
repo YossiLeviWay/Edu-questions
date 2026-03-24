@@ -40,6 +40,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAddAnswerModal, setShowAddAnswerModal] = useState(false);
   const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
+  const [editQuestionData, setEditQuestionData] = useState<any>(null);
   const [editAnswerData, setEditAnswerData] = useState<any>(null);
   const [loginPassword, setLoginPassword] = useState('');
   const [isQuestionExpanded, setIsQuestionExpanded] = useState(false);
@@ -120,11 +121,18 @@ export default function App() {
 
   const handleAddQuestion = async (title: string, text: string) => {
     if (!isAdmin || !text.trim() || !title.trim()) return;
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
-      title,
-      text,
-      createdAt: serverTimestamp()
-    });
+    
+    if (editQuestionData) {
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'questions', editQuestionData.id);
+      await updateDoc(docRef, { title, text });
+      setEditQuestionData(null);
+    } else {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), {
+        title,
+        text,
+        createdAt: serverTimestamp()
+      });
+    }
     setShowAddQuestionModal(false);
   };
 
@@ -150,24 +158,24 @@ export default function App() {
       className="min-h-screen bg-stone-50 text-slate-900 flex flex-col transition-all font-sans"
       style={{ fontSize: `${fontSize}px`, direction: 'rtl' }}
     >
-      <header className="bg-white border-b-2 border-slate-100 shadow-sm sticky top-0 z-40">
+      <header className="bg-white border-b-2 border-slate-100 shadow-sm sticky top-0 z-40 w-full">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(true)} className="p-3 bg-slate-50 hover:bg-blue-50 text-slate-600 rounded-2xl border border-slate-100 cursor-pointer">
-              <Menu size={28} />
+          <div className="flex items-center gap-2 md:gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="p-2 md:p-3 bg-slate-50 hover:bg-blue-50 text-slate-600 rounded-xl md:rounded-2xl border border-slate-100 cursor-pointer">
+              <Menu size={24} />
             </button>
-            <h1 className="font-black text-blue-600 text-xl md:text-2xl mr-2">הלוח השיתופי</h1>
+            <h1 className="font-black text-blue-600 text-lg md:text-2xl mr-1 md:mr-2 truncate max-w-[150px] md:max-w-none">הלוח השיתופי</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-slate-50 rounded-2xl p-1 gap-1 border border-slate-200">
-              <button onClick={() => setFontSize(f => Math.min(f + 4, 64))} className="p-2 text-blue-700 cursor-pointer"><Plus size={24} /></button>
-              <button onClick={() => setFontSize(f => Math.max(f - 4, 16))} className="p-2 text-blue-700 cursor-pointer"><Minus size={24} /></button>
+          <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex bg-slate-50 rounded-xl md:rounded-2xl p-1 gap-1 border border-slate-200">
+              <button onClick={() => setFontSize(f => Math.min(f + 4, 64))} className="p-1 md:p-2 text-blue-700 cursor-pointer"><Plus size={20} /></button>
+              <button onClick={() => setFontSize(f => Math.max(f - 4, 12))} className="p-1 md:p-2 text-blue-700 cursor-pointer"><Minus size={20} /></button>
             </div>
             {!isAdmin ? (
-              <button onClick={() => setShowLoginModal(true)} className="p-3 text-slate-400 hover:text-blue-600 cursor-pointer"><Settings size={24} /></button>
+              <button onClick={() => setShowLoginModal(true)} className="p-2 md:p-3 text-slate-400 hover:text-blue-600 cursor-pointer"><Settings size={20} /></button>
             ) : (
-              <button onClick={() => setIsAdmin(false)} className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-2xl font-bold cursor-pointer">
-                <LogOut size={20} /><span className="hidden sm:inline">יציאה</span>
+              <button onClick={() => setIsAdmin(false)} className="flex items-center gap-2 p-2 md:p-3 bg-red-50 text-red-600 rounded-xl md:rounded-2xl font-bold cursor-pointer">
+                <LogOut size={18} /><span className="hidden sm:inline">יציאה</span>
               </button>
             )}
           </div>
@@ -175,33 +183,36 @@ export default function App() {
       </header>
 
       {currentQuestion && (
-        <div className="sticky top-[80px] z-30 flex justify-center px-4 pointer-events-none">
+        <div className="sticky top-[65px] md:top-[80px] z-30 flex justify-center px-4 pointer-events-none w-full">
           <div 
-            className={`pointer-events-auto group relative bg-white border-2 border-blue-500 rounded-[2rem] shadow-2xl transition-all duration-300 max-w-2xl w-full ${isQuestionExpanded ? 'p-8' : 'p-3 text-center cursor-help'}`}
+            className={`pointer-events-auto group relative bg-white border-2 border-blue-500 rounded-2xl md:rounded-[2rem] shadow-2xl transition-all duration-300 max-w-2xl w-full ${isQuestionExpanded ? 'p-4 md:p-8' : 'p-2 md:p-3 text-center cursor-help'}`}
             onMouseEnter={() => setIsQuestionExpanded(true)}
             onMouseLeave={() => setIsQuestionExpanded(false)}
+            onClick={() => setIsQuestionExpanded(!isQuestionExpanded)}
           >
             {!isQuestionExpanded ? (
-              <div className="flex items-center justify-center gap-3 text-blue-700 font-black">
-                <HelpCircle size={24} className="animate-bounce" />
-                <span>{currentQuestion.title || 'צפייה בשאלה'}</span>
+              <div className="flex items-center justify-center gap-2 md:gap-3 text-blue-700 font-black text-sm md:text-base">
+                <HelpCircle size={20} className="animate-bounce" />
+                <span className="truncate">{currentQuestion.title || 'צפייה בשאלה'}</span>
               </div>
             ) : (
-              <div className="space-y-4 text-right">
+              <div className="space-y-3 md:space-y-4 text-right">
                 <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                  <span className="text-sm font-black text-blue-600 uppercase tracking-widest">{currentQuestion.title}</span>
-                  <X size={20} className="text-slate-300 cursor-pointer" onClick={() => setIsQuestionExpanded(false)} />
+                  <span className="text-xs md:text-sm font-black text-blue-600 uppercase tracking-widest truncate">{currentQuestion.title}</span>
+                  <X size={18} className="text-slate-300 cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsQuestionExpanded(false); }} />
                 </div>
-                <p className="font-bold text-slate-800 leading-snug whitespace-pre-wrap" style={{ fontSize: `${fontSize * 1.1}px` }}>
-                  {currentQuestion.text}
-                </p>
+                <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                  <p className="font-bold text-slate-800 leading-snug whitespace-pre-wrap" style={{ fontSize: `${Math.max(fontSize * 0.9, 14)}px` }}>
+                    {currentQuestion.text}
+                  </p>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full mt-4">
+      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full mt-2 md:mt-4 overflow-x-hidden">
         {currentQuestion ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {answers.map((ans) => (
@@ -238,15 +249,38 @@ export default function App() {
               <button onClick={() => setIsSidebarOpen(false)} className="cursor-pointer"><X size={32} /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {questions.map((q) => (
+            {questions.map((q) => (
                 <div 
                   key={q.id}
                   onClick={() => { setCurrentQuestion(q); setIsSidebarOpen(false); }}
-                  className={`p-6 rounded-[2rem] cursor-pointer border-2 transition-all text-right ${currentQuestion?.id === q.id ? 'bg-blue-600 border-blue-700 text-white shadow-xl' : 'bg-white border-slate-100 hover:border-blue-200 text-slate-700'}`}
+                  className={`p-4 md:p-6 rounded-2xl md:rounded-[2rem] cursor-pointer border-2 transition-all text-right ${currentQuestion?.id === q.id ? 'bg-blue-600 border-blue-700 text-white shadow-xl' : 'bg-white border-slate-100 hover:border-blue-200 text-slate-700'}`}
                 >
-                  <p className="font-black text-xl">{q.title || 'ללא כותרת'}</p>
+                  <p className="font-black text-lg md:text-xl">{q.title || 'ללא כותרת'}</p>
                   {isAdmin && (
-                    <button onClick={(e) => { e.stopPropagation(); if(confirm("למחוק?")) deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', q.id)) }} className="mt-2 text-red-300 text-sm font-bold cursor-pointer">מחיקת שאלה</button>
+                    <div className="flex gap-4 mt-3 border-t border-white/20 pt-2">
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setEditQuestionData(q); 
+                          setShowAddQuestionModal(true); 
+                        }} 
+                        className="flex items-center gap-1 text-white/80 hover:text-white text-sm font-bold cursor-pointer"
+                      >
+                        <Edit2 size={14} /> עריכה
+                      </button>
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if(confirm("למחוק את השאלה וכל התשובות שלה?")) {
+                            deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', q.id));
+                            if (currentQuestion?.id === q.id) setCurrentQuestion(null);
+                          }
+                        }} 
+                        className="flex items-center gap-1 text-red-200 hover:text-red-400 text-sm font-bold cursor-pointer"
+                      >
+                        <Trash2 size={14} /> מחיקה
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -262,23 +296,23 @@ export default function App() {
 
       {showAddAnswerModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="bg-white w-full max-w-3xl rounded-[3rem] p-10 shadow-2xl text-right">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black">{editAnswerData ? 'עריכת תגובה' : 'הוסיפי תגובה'}</h2>
+          <div className="bg-white w-full max-w-3xl rounded-2xl md:rounded-[3rem] p-6 md:p-10 shadow-2xl text-right overflow-y-auto max-h-[95vh]">
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <h2 className="text-2xl md:text-3xl font-black">{editAnswerData ? 'עריכת תגובה' : 'הוסיפי תגובה'}</h2>
               <div className="flex bg-slate-100 rounded-xl p-1">
-                <button onClick={() => setFontSize(f => Math.min(f+4, 64))} className="p-2 text-blue-600 cursor-pointer"><Plus size={20}/></button>
-                <button onClick={() => setFontSize(f => Math.max(f-4, 16))} className="p-2 text-blue-600 cursor-pointer"><Minus size={20}/></button>
+                <button onClick={() => setFontSize(f => Math.min(f+4, 64))} className="p-2 text-blue-600 cursor-pointer"><Plus size={18}/></button>
+                <button onClick={() => setFontSize(f => Math.max(f-4, 12))} className="p-2 text-blue-600 cursor-pointer"><Minus size={18}/></button>
               </div>
             </div>
-            <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-100 rounded-[2rem]">
-              <p className="font-bold text-slate-800" style={{ fontSize: `${fontSize * 0.9}px` }}>{currentQuestion?.text}</p>
+            <div className="mb-4 md:mb-6 p-4 md:p-6 bg-blue-50 border-2 border-blue-100 rounded-2xl md:rounded-[2rem] max-h-[30vh] overflow-y-auto custom-scrollbar">
+              <p className="font-bold text-slate-800" style={{ fontSize: `${Math.max(fontSize * 0.8, 14)}px` }}>{currentQuestion?.text}</p>
             </div>
             <form onSubmit={(e: any) => { e.preventDefault(); handleAddAnswer(e.target.name.value, e.target.text.value); }}>
-              <input name="name" defaultValue={editAnswerData?.name} placeholder="שם" className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl mb-4 text-right" />
-              <textarea name="text" defaultValue={editAnswerData?.text} rows={5} placeholder="תשובה" className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-3xl mb-6 text-right resize-none" style={{ fontSize: `${fontSize}px` }} required />
+              <input name="name" defaultValue={editAnswerData?.name} placeholder="שם" className="w-full p-4 md:p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl md:rounded-3xl mb-4 text-right" />
+              <textarea name="text" defaultValue={editAnswerData?.text} rows={5} placeholder="תשובה" className="w-full p-4 md:p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl md:rounded-3xl mb-6 text-right resize-none" style={{ fontSize: `${Math.max(fontSize, 16)}px` }} required />
               <div className="flex gap-4">
-                <button type="submit" className="flex-2 bg-blue-600 text-white py-6 px-10 rounded-3xl font-black text-2xl shadow-xl cursor-pointer">שלחי</button>
-                <button type="button" onClick={() => setShowAddAnswerModal(false)} className="flex-1 bg-slate-100 py-6 rounded-3xl font-black cursor-pointer">ביטול</button>
+                <button type="submit" className="flex-2 bg-blue-600 text-white py-4 md:py-6 px-6 md:px-10 rounded-2xl md:rounded-3xl font-black text-xl md:text-2xl shadow-xl cursor-pointer">שלחי</button>
+                <button type="button" onClick={() => setShowAddAnswerModal(false)} className="flex-1 bg-slate-100 py-4 md:py-6 rounded-2xl md:rounded-3xl font-black cursor-pointer">ביטול</button>
               </div>
             </form>
           </div>
@@ -287,17 +321,30 @@ export default function App() {
 
       {showAddQuestionModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
-          <div className="bg-white w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl text-right">
-            <h2 className="text-3xl font-black mb-6">שאלה חדשה</h2>
-            <input id="qTitle" placeholder="כותרת השאלה (תוצג בתפריט)" className="w-full p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl mb-4 text-right font-bold" />
-            <textarea id="qText" placeholder="תוכן השאלה המלא" className="w-full p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl text-xl min-h-[200px] text-right" />
+          <div className="bg-white w-full max-w-2xl rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl text-right overflow-y-auto max-h-[95vh]">
+            <h2 className="text-2xl md:text-3xl font-black mb-6">{editQuestionData ? 'עריכת שאלה' : 'שאלה חדשה'}</h2>
+            <input 
+              id="qTitle" 
+              defaultValue={editQuestionData?.title}
+              placeholder="כותרת השאלה (תוצג בתפריט)" 
+              className="w-full p-4 md:p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl md:rounded-3xl mb-4 text-right font-bold" 
+            />
+            <div className="mb-2 text-xs text-slate-400 font-bold">טיפ: התחילי שורה במספר (למשל 1.) כדי ליצור סעיפים ברורים</div>
+            <textarea 
+              id="qText" 
+              defaultValue={editQuestionData?.text}
+              placeholder="תוכן השאלה המלא" 
+              className="w-full p-4 md:p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl md:rounded-3xl text-lg md:text-xl min-h-[200px] text-right" 
+            />
             <div className="flex gap-4 mt-8">
               <button onClick={() => {
                 const title = (document.getElementById('qTitle') as HTMLInputElement).value;
                 const text = (document.getElementById('qText') as HTMLTextAreaElement).value;
                 handleAddQuestion(title, text);
-              }} className="flex-2 bg-blue-600 text-white py-6 px-10 rounded-3xl font-black text-2xl shadow-xl cursor-pointer">פרסם</button>
-              <button onClick={() => setShowAddQuestionModal(false)} className="flex-1 bg-slate-100 py-6 rounded-3xl font-black cursor-pointer">ביטול</button>
+              }} className="flex-2 bg-blue-600 text-white py-4 md:py-6 px-6 md:px-10 rounded-2xl md:rounded-3xl font-black text-xl md:text-2xl shadow-xl cursor-pointer">
+                {editQuestionData ? 'עדכן' : 'פרסם'}
+              </button>
+              <button onClick={() => { setShowAddQuestionModal(false); setEditQuestionData(null); }} className="flex-1 bg-slate-100 py-4 md:py-6 rounded-2xl md:rounded-3xl font-black cursor-pointer">ביטול</button>
             </div>
           </div>
         </div>
@@ -322,7 +369,14 @@ export default function App() {
         </div>
       )}
 
-      <style dangerouslySetInnerHTML={{ __html: `.animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        .animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1); } 
+        @keyframes slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      ` }} />
     </div>
   );
 }
