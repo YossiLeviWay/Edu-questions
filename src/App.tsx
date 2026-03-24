@@ -202,9 +202,19 @@ export default function App() {
                   <X size={18} className="text-slate-300 cursor-pointer" onClick={(e) => { e.stopPropagation(); setIsQuestionExpanded(false); }} />
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                  <p className="font-bold text-slate-800 leading-snug whitespace-pre-wrap" style={{ fontSize: `${Math.max(fontSize * 0.9, 14)}px` }}>
-                    {currentQuestion.text}
-                  </p>
+                  <div 
+                    className="font-bold text-slate-800 leading-relaxed whitespace-pre-wrap text-right" 
+                    style={{ fontSize: `${Math.max(fontSize * 0.9, 14)}px` }}
+                  >
+                    {currentQuestion.text.split('\n').map((line: string, i: number) => {
+                      const isListItem = /^\d+[\.)]/.test(line.trim());
+                      return (
+                        <div key={i} className={`${isListItem ? 'mt-3 mb-1 text-blue-900 border-r-4 border-blue-200 pr-3 mr-1' : ''}`}>
+                          {line}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -226,7 +236,16 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                <p className="whitespace-pre-wrap leading-relaxed text-slate-700 text-right">{ans.text}</p>
+                <div className="whitespace-pre-wrap leading-relaxed text-slate-700 text-right">
+                  {ans.text.split('\n').map((line: string, i: number) => {
+                    const isListItem = /^\d+[\.)]/.test(line.trim());
+                    return (
+                      <div key={i} className={`${isListItem ? 'mt-2 font-black text-blue-800' : ''}`}>
+                        {line}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
@@ -305,7 +324,19 @@ export default function App() {
               </div>
             </div>
             <div className="mb-4 md:mb-6 p-4 md:p-6 bg-blue-50 border-2 border-blue-100 rounded-2xl md:rounded-[2rem] max-h-[30vh] overflow-y-auto custom-scrollbar">
-              <p className="font-bold text-slate-800" style={{ fontSize: `${Math.max(fontSize * 0.8, 14)}px` }}>{currentQuestion?.text}</p>
+              <div 
+                className="font-bold text-slate-800 whitespace-pre-wrap leading-relaxed" 
+                style={{ fontSize: `${Math.max(fontSize * 0.8, 14)}px` }}
+              >
+                {currentQuestion?.text.split('\n').map((line: string, i: number) => {
+                  const isListItem = /^\d+[\.)]/.test(line.trim());
+                  return (
+                    <div key={i} className={`${isListItem ? 'mt-2 font-black text-blue-800' : ''}`}>
+                      {line}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <form onSubmit={(e: any) => { e.preventDefault(); handleAddAnswer(e.target.name.value, e.target.text.value); }}>
               <input name="name" defaultValue={editAnswerData?.name} placeholder="שם" className="w-full p-4 md:p-6 bg-slate-50 border-2 border-slate-100 rounded-2xl md:rounded-3xl mb-4 text-right" />
